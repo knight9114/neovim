@@ -52,7 +52,6 @@ lazy.setup({
   { "rebelot/kanagawa.nvim" },
   { "catppuccin/nvim", name = "catppuccin" },
   { "rose-pine/neovim", name = "rose-pine" },
-  { "mellow-theme/mellow.nvim" },
   { "folke/tokyonight.nvim" },
 
   -- [[ coding ]]
@@ -67,7 +66,7 @@ lazy.setup({
   { "echasnovski/mini.nvim", branch = "main" },
 })
 
-vim.cmd.colorscheme("mellow")
+vim.cmd.colorscheme("catppuccin")
 
 require("nvim-treesitter.configs").setup({
   highlight = { enable = true },
@@ -97,8 +96,9 @@ require("mini.ai").setup({ n_lines = 500 })
 require("mini.comment").setup({})
 require("mini.surround").setup({})
 require("mini.extra").setup({})
-require("mini.completion").setup({})
 require("mini.statusline").setup({})
+require("mini.pairs").setup({})
+require("mini.completion").setup({})
 
 require("mini.notify").setup({ lsp_progress = { enable = false } })
 vim.notify = require("mini.notify").make_notify({})
@@ -154,6 +154,13 @@ vim.api.nvim_create_autocmd("LspAttach", {
       vim.lsp.completion.enable(true, client_id, event.buf, {})
     end
   end,
+})
+
+require("snacks").setup({
+  bigfile = { enabled = true },
+  dashboard = { example = "compact_files" },
+  git = { enabled = true },
+  indent = { enabled = true },
 })
 
 local lspconfig = require("lspconfig")

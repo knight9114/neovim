@@ -95,6 +95,42 @@ require("lazy").setup({
   {
     { "tpope/vim-sleuth" },
     {
+      "folke/todo-comments.nvim",
+      event = "VimEnter",
+      dependencies = {
+        { "nvim-lua/plenary.nvim" },
+      },
+      opts = { signs = false },
+    },
+  },
+
+  -- snacks
+  {
+    {
+      "folke/snacks.nvim",
+      lazy = false,
+      priority = 1000,
+      opts = {
+        bigfile = { enable = true },
+        bufdelete = { enable = true },
+        dashboard = { example = "compact_files" },
+        notifier = { enabled = true },
+        quickfile = { enabled = true },
+        words = { enabled = true },
+      },
+      keys = {
+        { "<leader>z", function() Snacks.zen() end, desc = "[Z]en Mode" },
+        { "<leader>Z", function() Snacks.zen.zoom() end, desc = "[Z]oom" },
+        { "<leader>bdd", function() Snacks.bufdelete() end, desc = "[B]uffer [D]elete" },
+        { "<leader>bda", function() Snacks.bufdelete.all() end, desc = "[B]uffers [D]elete [A]ll" },
+        { "<leader>bdo", function() Snacks.bufdelete.other() end, desc = "[B]uffers [D]elete [O]thers" },
+      },
+    },
+  },
+
+  -- mini
+  {
+    {
       "echasnovski/mini.nvim",
       lazy = false,
       priority = 1000,
@@ -104,22 +140,10 @@ require("lazy").setup({
         require("mini.pairs").setup({})
         require("mini.surround").setup({})
         require("mini.statusline").setup({ use_icons = vim.g.have_nerd_font })
+        require("mini.files").setup({})
       end,
-    },
-    {
-      "folke/todo-comments.nvim",
-      event = "VimEnter",
-      dependencies = {
-        { "nvim-lua/plenary.nvim" },
-      },
-      opts = { signs = false },
-    },
-    {
-      "folke/snacks.nvim",
-      lazy = false,
-      priority = 1000,
-      opts = {
-        dashboard = { example = "compact_files" },
+      keys = {
+        { "<leader>m", function() if not MiniFiles.close() then MiniFiles.open() end end, desc = "Toggle [M]ini-Files" },
       },
     },
   },
@@ -179,13 +203,8 @@ require("lazy").setup({
         },
       },
       spec = {
-        -- { "<leader>c", group = "[C]ode", mode = { "n", "x" } },
-        -- { "<leader>d", group = "[D]ocument" },
-        -- { "<leader>r", group = "[R]ename" },
         { "<leader>s", group = "[S]earch" },
-        -- { "<leader>w", group = "[W]orkspace" },
-        -- { "<leader>t", group = "[T]oggle" },
-        -- { "<leader>h", group = "Git [H]unk", mode = { "n", "v" } },
+        { "<leader>l", group = "[L]SP" },
       },
     },
   },
@@ -326,7 +345,7 @@ require("lazy").setup({
     {
       "neovim/nvim-lspconfig",
       dependencies = {
-        {"j-hui/fidget.nvim", opts = {} },
+        { "j-hui/fidget.nvim", opts = {} },
         { "hrsh7th/cmp-nvim-lsp" },
       },
       config = function()

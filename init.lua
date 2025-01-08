@@ -154,6 +154,24 @@ require("lazy").setup({
         })
       end,
     },
+    {
+      "aaronik/treewalker.nvim",
+      opts = {
+        highlight = true,
+        highlight_duration = 250,
+      },
+      keys = {
+        { "<C-k>", "<cmd>Treewalker Up<cr>", mode = { "n", "v" } },
+        { "<C-j>", "<cmd>Treewalker Down<cr>", mode = { "n", "v" } },
+        { "<C-l>", "<cmd>Treewalker Right<cr>", mode = { "n", "v" } },
+        { "<C-h>", "<cmd>Treewalker Left<cr>", mode = { "n", "v" } },
+        -- TODO: requires enabling Ctrl-Shift in terminal emulator
+        -- { "<C-S-k>", "<cmd>Treewalker SwapUp<cr>", mode = "n" },
+        -- { "<C-S-j>", "<cmd>Treewalker SwapDown<cr>", mode = "n" },
+        -- { "<C-S-l>", "<cmd>Treewalker SwapRight<cr>", mode = "n" },
+        -- { "<C-S-h>", "<cmd>Treewalker SwapLeft<cr>", mode = "n" },
+      },
+    },
 
     -- [[ ui ]]
     {

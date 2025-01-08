@@ -172,6 +172,16 @@ require("lazy").setup({
         -- { "<C-S-h>", "<cmd>Treewalker SwapLeft<cr>", mode = "n" },
       },
     },
+    {
+      "jiaoshijie/undotree",
+      dependencies = {
+        { "nvim-lua/plenary.nvim" },
+      },
+      config = true,
+      keys = {
+        { "<leader>u", function() require("undotree").toggle() end, desc = "Toggle Undotree" },
+      },
+    },
 
     -- [[ ui ]]
     {

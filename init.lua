@@ -62,6 +62,7 @@ require("lazy").setup({
     { "rose-pine/neovim", name = "rose-pine" },
     { "folke/tokyonight.nvim" },
     { "ficcdaf/ashen.nvim" },
+    { "comfysage/evergarden", opts = { variant = "hard" } },
 
     -- [[ coding ]]
     {

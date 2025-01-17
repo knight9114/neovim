@@ -205,6 +205,22 @@ require("lazy").setup({
         })
       end
     },
+    {
+      "folke/zen-mode.nvim",
+      opts = {},
+      keys = {
+        { "<leader>zz", function() require("zen-mode").toggle({ window = { width = 0.75 } }) end, desc = "Toggle Zen Mode" },
+      },
+    },
+    {
+      "folke/twilight.nvim",
+      opts = {
+        exclude = { "text" },
+      },
+      keys = {
+        { "<leader>zt", "<cmd>Twilight<cr>", desc = "Toggle Twilight" },
+      },
+    },
 
     -- [[ mini ]]
     {

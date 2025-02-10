@@ -50,6 +50,8 @@ vim.o.timeoutlen = 300
 vim.g.mapleader = vim.keycode("<Space>")
 vim.keymap.set({ "n", "x", "o" }, "gy", '"+y', { desc = "Copy to System Clipboard" })
 vim.keymap.set({ "n", "x", "o" }, "gp", '"+p', { desc = "Paste from System Clipboard" })
+vim.keymap.set({ "n" }, "j", "gj")
+vim.keymap.set({ "n" }, "k", "gk")
 
 
 -- [[ Initialize Package Manager ]]
@@ -264,6 +266,19 @@ require("lazy").setup({
         vim.keymap.set("n", "<leader>fd", "<cmd>Pick diagnostic<cr>", { desc = "Find Diagnostics" })
         vim.keymap.set("n", "<leader>fs", "<cmd>Pick buf_lines<cr>", { desc = "Search in Local Buffer" })
       end,
+    },
+
+    -- [[ ai ]]
+    {
+      "Aaronik/GPTModels.nvim",
+      dependencies = {
+        { "MunifTanjim/nui.nvim" },
+        { "nvim-telescope/telescope.nvim" },
+      },
+      keys = {
+        { "<leader>ac", "<cmd>GPTModelsCode<cr>", desc = "AI Code" },
+        { "<leader>aq", "<cmd>GPTModelsCode<cr>", desc = "AI Chat" },
+      },
     },
   },
   install = {

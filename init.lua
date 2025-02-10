@@ -65,6 +65,8 @@ require("lazy").setup({
     { "folke/tokyonight.nvim" },
     { "ficcdaf/ashen.nvim" },
     { "comfysage/evergarden", opts = { variant = "hard" } },
+    { "oonamo/ef-themes.nvim" },
+    { "vague2k/vague.nvim" },
 
     -- [[ coding ]]
     {
@@ -130,6 +132,74 @@ require("lazy").setup({
         lspconfig.ruff.setup({})
         lspconfig.zls.setup({})
         lspconfig.clangd.setup({})
+      end,
+    },
+    {
+      "hrsh7th/nvim-cmp",
+      version = false,
+      event = "InsertEnter",
+      dependencies = {
+        "hrsh7th/cmp-nvim-lsp",
+        "hrsh7th/cmp-buffer",
+        "hrsh7th/cmp-path",
+      },
+      opts = function()
+        vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
+        local cmp = require("cmp")
+        local defaults = require("cmp.config.default")()
+        local auto_select = true
+
+        return {
+          auto_brackets = {},
+          completion = {
+            completeopt = "menu,menuone,noinsert" .. (auto_select and "" or ",noselect"),
+          },
+          preselect = auto_select and cmp.PreselectMode.Item or cmp.PreselectMode.None,
+          mapping = cmp.mapping.preset.insert({
+            ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+            ["<C-f>"] = cmp.mapping.scroll_docs(4),
+            ["<C-n>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
+            ["<C-p>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
+            ["<C-Space>"] = cmp.mapping.complete(),
+            ["<CR>"] = cmp.mapping.confirm({ select = true }),
+            ["<C-CR>"] = function(fallback)
+              cmp.abort()
+              fallback()
+            end,
+            ["<Tab>"] = function(fallback)
+              if not cmp.select_next_item() then
+                if vim.bo.buftype ~= "prompt" then
+                  cmp.complete()
+                else
+                  fallback()
+                end
+              end
+            end,
+            ["<S-Tab>"] = function(fallback)
+              if not cmp.select_prev_item() then
+                if vim.bo.buftype ~= "prompt" then
+                  cmp.complete()
+                else
+                  fallback()
+                end
+              end
+            end,
+          }),
+          sources = cmp.config.sources({
+            { name = "nvim_lsp" },
+            { name = "path" },
+          }, {
+            { name = "buffer" },
+          }),
+          formatting = {
+          },
+          experimental = {
+            ghost_text = vim.g.ai_cmp and {
+              hl_group = "CmpGhostText",
+            } or false,
+          },
+          sorting = defaults.sorting,
+        }
       end,
     },
     {
@@ -238,10 +308,6 @@ require("lazy").setup({
         require("mini.pairs").setup({})
         require("mini.starter").setup({})
 
-        require("mini.completion").setup({})
-        vim.keymap.set("i", "<Tab>", [[pumvisible() ? "\<C-n>" : "\<Tab>"]], { expr = true })
-        vim.keymap.set("i", "<S-Tab>", [[pumvisible() ? "\<C-p>" : "\<S-Tab>"]], { expr = true })
-
         require("mini.notify").setup({ lsp_progress = { enable = false } })
         vim.notify = require("mini.notify").make_notify({})
 
@@ -269,17 +335,6 @@ require("lazy").setup({
     },
 
     -- [[ ai ]]
-    {
-      "Aaronik/GPTModels.nvim",
-      dependencies = {
-        { "MunifTanjim/nui.nvim" },
-        { "nvim-telescope/telescope.nvim" },
-      },
-      keys = {
-        { "<leader>ac", "<cmd>GPTModelsCode<cr>", desc = "AI Code" },
-        { "<leader>aq", "<cmd>GPTModelsCode<cr>", desc = "AI Chat" },
-      },
-    },
   },
   install = {
     colorscheme = { "catppuccin-mocha" },

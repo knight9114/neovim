@@ -25,16 +25,6 @@ vim.opt.splitright = true
 vim.opt.signcolumn = "yes"
 vim.opt.clipboard = "unnamedplus"
 
-local servers = {
-  "ty",
-  "rust_analyzer",
-  "clangd",
-  "gopls",
-  "ts_ls",
-  "marksman",
-  "lua_ls",
-}
-
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "lua", "c", "cpp", "javascript", "typescript", "javascriptreact", "typescriptreact", "json", "yaml", "html", "toml", "css" },
   callback = function()
@@ -240,16 +230,17 @@ require("lazy").setup({
   },
 })
 
-vim.lsp.config("*", {
-  capabilities = require("blink.cmp").get_lsp_capabilities({
-    textDocument = {
-      foldingRange = {
-        dynamicRegistration = false,
-        lineFoldingOnly = true,
-      },
-    },
-  })
-})
+local servers = {
+  "ty",
+  "rust_analyzer",
+  "clangd",
+  "gopls",
+  "ts_ls",
+  "marksman",
+  "lua_ls",
+}
+
 vim.lsp.enable(servers)
+vim.lsp.set_log_level("off")
 
 vim.cmd.colorscheme("vague")

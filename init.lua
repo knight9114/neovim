@@ -25,6 +25,16 @@ vim.opt.splitright = true
 vim.opt.signcolumn = "yes"
 vim.opt.clipboard = "unnamedplus"
 
+local servers = {
+  "ty",
+  "rust_analyzer",
+  "clangd",
+  "gopls",
+  "ts_ls",
+  "marksman",
+  "lua_ls",
+}
+
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "lua", "c", "cpp", "javascript", "typescript", "javascriptreact", "typescriptreact", "json", "yaml", "html", "toml", "css" },
   callback = function()
@@ -53,6 +63,34 @@ vim.diagnostic.config({
     border = "rounded",
     source = "always",
   },
+})
+
+vim.api.nvim_create_autocmd("LspAttach", {
+  desc = "LSP Actions",
+  callback = function(event)
+    local opts = { buffer = event.buf }
+    vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+    vim.keymap.set("n", "gri", vim.lsp.buf.implementation, opts)
+    vim.keymap.set("n", "grn", vim.lsp.buf.rename, opts)
+    vim.keymap.set("n", "grr", vim.lsp.buf.references, opts)
+    vim.keymap.set("n", "grt", vim.lsp.buf.type_definition, opts)
+    vim.keymap.set("n", "gO", vim.lsp.buf.document_symbol, opts)
+    vim.keymap.set("i", "<C-s>", vim.lsp.buf.signature_help, opts)
+    vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+    vim.keymap.set("n", "gca", vim.lsp.buf.code_action, opts)
+    vim.keymap.set("n", "]d", function()
+      vim.diagnostic.jump({ count = 1, float = true })
+    end, { desc = "Next Diagnostic" })
+    vim.keymap.set("n", "[d", function()
+      vim.diagnostic.jump({ count = -1, float = true })
+    end, { desc = "Prev Diagnostic" })
+    vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Show Diagnostic Error" })
+    vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Diagnostic Quickfix List" })
+    vim.api.nvim_create_autocmd("BufWritePre", {
+      buffer = event.buf,
+      callback = function() vim.lsp.buf.format({ async = false }) end,
+    })
+  end,
 })
 
 require("lazy").setup({
@@ -129,8 +167,8 @@ require("lazy").setup({
           },
         },
         strategies = {
-          chat = { adapter = "litellm", model = "gpt-oss-20b" },
-          inline = { adapter = "litellm", model = "gpt-oss-20b" },
+          chat = { adapter = "litellm", model = "olmo-3-7b" },
+          inline = { adapter = "litellm", model = "olmo-3-7b" },
         },
         extensions = {
           mcphub = {
@@ -144,74 +182,74 @@ require("lazy").setup({
         },
       },
     },
-    {
-      "hansmrtn/clanker.nvim",
-      opts = {
-        api_url = "http://localhost:4000",
-        model = "gpt-oss-20b",
-        context_lines = 50,
-      },
-    },
   },
   { -- lsp
     {
       "nvim-treesitter/nvim-treesitter",
-      build = ":TSUpdate",
-      main = "nvim-treesitter.configs",
-      opts = {
-        ensure_installed = {
-          "c", "lua", "vim", "vimdoc", "query", "python", "rust", "go", "javascript", "typescript", "markdown"
-        },
-        highlight = { enable = true },
+      dependencies = {
+        { "nvim-treesitter/nvim-treesitter-context" },
+        { "nvim-treesitter/nvim-treesitter-textobjects" },
       },
-    },
-    {
-      "neovim/nvim-lspconfig",
-      dependencies = { "saghen/blink.cmp" },
+      lazy = false,
+      branch = "main",
+      build = ":TSUpdate",
       config = function()
-        local lspconfig = require("lspconfig")
-        vim.opt.completeopt = { "menu", "menuone", "noselect" }
-        local on_attach = function(client, bufnr)
-          if vim.lsp.completion then
-            vim.lsp.completion.enable(true, client.id, bufnr, { autotrigger = true })
-          end
+        local ts = require("nvim-treesitter")
+        ts.setup({
+          install_dir = vim.fn.stdpath("data") .. "/site",
+        })
 
-          local opts = { buffer = bufnr }
-          vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
-          vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-          vim.keymap.set("n", "grn", vim.lsp.buf.rename, opts)
-          vim.keymap.set("n", "gca", vim.lsp.buf.code_action, opts)
-          vim.keymap.set("n", "]d", function()
-            vim.diagnostic.jump({ count = 1, float = true })
-          end, { desc = "Next Diagnostic" })
-          vim.keymap.set("n", "[d", function()
-            vim.diagnostic.jump({ count = -1, float = true })
-          end, { desc = "Prev Diagnostic" })
-          vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Show Diagnostic Error" })
-          vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Diagnostic Quickfix List" })
-          vim.api.nvim_create_autocmd("BufWritePre", {
-            buffer = bufnr,
-            callback = function() vim.lsp.buf.format({ async = false }) end,
-          })
-        end
-
-        local servers = {
-          "ty",
-          "rust_analyzer",
-          "clangd",
-          "gopls",
-          "ts_ls",
-          "marksman",
-          "lua_ls",
+        local group = vim.api.nvim_create_augroup("TreesitterSetup", { clear = true })
+        local ignores = {
+          "checkhealth",
+          "lazy",
         }
 
-        for _, server in ipairs(servers) do
-          vim.lsp.config[server] = { on_attach = on_attach }
-          vim.lsp.enable(server)
-        end
+        vim.api.nvim_create_autocmd("FileType", {
+          group = group,
+          callback = function(event)
+            if vim.tbl_contains(ignores, event.match) then
+              return
+            end
+
+            local lang = vim.treesitter.language.get_lang(event.match) or event.match
+            pcall(vim.treesitter.start, event.buf, lang)
+            ts.install({ lang }, { summary = true })
+          end,
+        })
       end,
+    },
+    {
+      "saghen/blink.cmp",
+      dependencies = { "rafamadriz/friendly-snippets" },
+      build = "rustup run nightly cargo build --release",
+      opts = {},
+    },
+    {
+      "folke/lazydev.nvim",
+      ft = "lua",
+      opts = {
+        library = {
+          {
+            path = "${3rd}/luv/library",
+            words = { "vim%.uv" },
+          },
+        },
+      },
     },
   },
 })
+
+vim.lsp.config("*", {
+  capabilities = require("blink.cmp").get_lsp_capabilities({
+    textDocument = {
+      foldingRange = {
+        dynamicRegistration = false,
+        lineFoldingOnly = true,
+      },
+    },
+  })
+})
+vim.lsp.enable(servers)
 
 vim.cmd.colorscheme("vague")

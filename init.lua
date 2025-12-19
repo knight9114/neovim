@@ -51,7 +51,7 @@ vim.diagnostic.config({
   severity_sort = true,
   float = {
     border = "rounded",
-    source = "always",
+    source = true,
   },
 })
 
@@ -176,35 +176,94 @@ require("lazy").setup({
   { -- lsp
     {
       "nvim-treesitter/nvim-treesitter",
-      dependencies = {
-        { "nvim-treesitter/nvim-treesitter-context" },
-        { "nvim-treesitter/nvim-treesitter-textobjects" },
-      },
       lazy = false,
+      event = "BufRead",
       branch = "main",
       build = ":TSUpdate",
-      config = function()
-        local ts = require("nvim-treesitter")
-        ts.setup({
-          install_dir = vim.fn.stdpath("data") .. "/site",
-        })
+      ---@class TSConfig
+      opts = {
+        -- custom handling of parsers
+        ensure_installed = {
+          "bash",
+          "c",
+          "css",
+          "diff",
+          "go",
+          "gomod",
+          "gosum",
+          "html",
+          "javascript",
+          "json",
+          "json5",
+          "lua",
+          "luadoc",
+          "markdown",
+          "markdown_inline",
+          "python",
+          "query",
+          "regex",
+          "toml",
+          "tsx",
+          "typescript",
+          "vim",
+          "vimdoc",
+          "yaml",
+          "zig",
+        },
+      },
+      config = function(_, opts)
+        if opts.ensure_installed and #opts.ensure_installed > 0 then
+          require("nvim-treesitter").install(opts.ensure_installed)
+          for _, parser in ipairs(opts.ensure_installed) do
+            local filetypes = parser
+            vim.treesitter.language.register(parser, filetypes)
 
-        local group = vim.api.nvim_create_augroup("TreesitterSetup", { clear = true })
-        local ignores = {
-          "checkhealth",
-          "lazy",
-        }
+            vim.api.nvim_create_autocmd({ "FileType" }, {
+              pattern = filetypes,
+              callback = function(event)
+                vim.treesitter.start(event.buf, parser)
+              end,
+            })
+          end
+        end
 
-        vim.api.nvim_create_autocmd("FileType", {
-          group = group,
+        vim.api.nvim_create_autocmd("BufRead", {
           callback = function(event)
-            if vim.tbl_contains(ignores, event.match) then
+            local bufnr = event.buf
+            local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
+
+            if filetype == "" then
               return
             end
 
-            local lang = vim.treesitter.language.get_lang(event.match) or event.match
-            pcall(vim.treesitter.start, event.buf, lang)
-            ts.install({ lang }, { summary = true })
+            for _, filetypes in pairs(opts.ensure_installed) do
+              local ft_table = type(filetypes) == "table" and filetypes or { filetypes }
+              if vim.tbl_contains(ft_table, filetype) then
+                return
+              end
+            end
+
+            local parser_name = vim.treesitter.language.get_lang(filetype)
+            if not parser_name then
+              return
+            end
+
+            local parser_configs = require("nvim-treesitter.parsers")
+            if not parser_configs[parser_name] then
+              return
+            end
+
+            local parser_installed = pcall(vim.treesitter.get_parser, bufnr, parser_name)
+
+            if not parser_installed then
+              require("nvim-treesitter").install({ parser_name }):wait(30000)
+            end
+
+            parser_installed = pcall(vim.treesitter.get_parser, bufnr, parser_name)
+
+            if parser_installed then
+              vim.treesitter.start(bufnr, parser_name)
+            end
           end,
         })
       end,

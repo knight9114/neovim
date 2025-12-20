@@ -269,6 +269,10 @@ require("lazy").setup({
             local parser_installed = pcall(vim.treesitter.get_parser, bufnr, parser_name)
 
             if not parser_installed then
+              if vim.fn.executable("tree-sitter") == 0 then
+                vim.notify("Must install `tree-sitter` CLI tool", vim.log.levels.WARN, { title = "Tree-Sitter missing" })
+                return
+              end
               require("nvim-treesitter").install({ parser_name }):wait(30000)
             end
 
